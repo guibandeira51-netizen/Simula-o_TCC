@@ -15,51 +15,45 @@ export class GraphicsCore {
 
     splitMode = false;
     
-    // Animação de entrada (Intro Cinematográfica)
     introActive = true;
     introProgress = 0;
 
     constructor() {
         this.scene = new THREE.Scene();
         this.scene.background = new THREE.Color(0x000000); 
-        this.scene.fog = new THREE.FogExp2(0x000000, 0.005);
+        this.scene.fog = new THREE.FogExp2(0x000000, 0.004);
 
         const aspect = window.innerWidth / window.innerHeight;
         
         this.camera1 = new THREE.PerspectiveCamera(45, aspect, 0.1, 8000);
-        // Câmera inicia MUITO longe e no topo para o "mergulho" cinematográfico
-        this.camera1.position.set(0, 150, 50);
+        this.camera1.position.set(0, 160, 60);
         
         this.camera2 = new THREE.PerspectiveCamera(45, aspect, 0.1, 8000);
         this.camera2.position.set(0, -35, 30);
 
+        // Otimizado para RX 7600 (Sem restrição artificial de pixel ratio)
         this.renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: "high-performance", stencil: false });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2.5));
         
-        // HDR e ACES Filmic: Segredo para o visual da NASA
         this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        // Exposição reduzida para preservar detalhes do núcleo contra o blowout
-        this.renderer.toneMappingExposure = 0.8; 
+        this.renderer.toneMappingExposure = 0.85; 
         this.renderer.autoClear = false;
 
         document.getElementById('canvas-container')?.appendChild(this.renderer.domElement);
 
         this.controls1 = new OrbitControls(this.camera1, this.renderer.domElement);
-        this.controls1.enableDamping = true; this.controls1.dampingFactor = 0.04;
-        this.controls1.maxDistance = 300;
-        // Desativa controles durante a intro
+        this.controls1.enableDamping = true; 
+        this.controls1.dampingFactor = 0.04;
+        this.controls1.maxDistance = 400;
         this.controls1.enabled = false;
 
         this.controls2 = new OrbitControls(this.camera2, this.renderer.domElement);
-        this.controls2.enableDamping = true; this.controls2.dampingFactor = 0.04;
+        this.controls2.enableDamping = true; 
+        this.controls2.dampingFactor = 0.04;
 
-        // Pós Processamento
         const renderScene = new RenderPass(this.scene, this.camera1);
-        
-        // BLOOM CIENTÍFICO: Threshold alto (0.85) garante que SÓ as estrelas mais densas 
-        // e o Sol emitam glow. Mantém o disco espiral nítido e poeira definida.
-        const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.7, 0.5, 0.85);
+        const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.65, 0.4, 0.88);
         
         this.composer = new EffectComposer(this.renderer);
         this.composer.addPass(renderScene);
@@ -83,20 +77,17 @@ export class GraphicsCore {
     updateCinematicIntro(delta: number) {
         if (!this.introActive) return;
         
-        this.introProgress += delta * 0.3; // Duração aprox ~3.3 segundos
+        this.introProgress += delta * 0.25; 
         if (this.introProgress >= 1.0) {
             this.introProgress = 1.0;
             this.introActive = false;
-            this.controls1.enabled = true; // Libera controle
+            this.controls1.enabled = true;
         }
 
-        // Função Ease Out Cubic
         let t = 1 - Math.pow(1 - this.introProgress, 3);
-
-        // Interpola da posição espacial para a posição orbital lateral
         this.camera1.position.x = THREE.MathUtils.lerp(0, 0, t);
-        this.camera1.position.y = THREE.MathUtils.lerp(150, -35, t);
-        this.camera1.position.z = THREE.MathUtils.lerp(50, 30, t);
+        this.camera1.position.y = THREE.MathUtils.lerp(160, -35, t);
+        this.camera1.position.z = THREE.MathUtils.lerp(60, 30, t);
         this.camera1.lookAt(0, 0, 0);
     }
 
@@ -121,12 +112,10 @@ export class GraphicsCore {
             const w = window.innerWidth; const h = window.innerHeight;
             this.renderer.setScissorTest(true);
             
-            // Viewport Esquerdo
             this.renderer.setViewport(0, 0, w/2, h);
             this.renderer.setScissor(0, 0, w/2, h);
             this.renderer.render(this.scene, this.camera1);
 
-            // Viewport Direito
             this.renderer.setViewport(w/2, 0, w/2, h);
             this.renderer.setScissor(w/2, 0, w/2, h);
             this.renderer.render(this.scene, this.camera2);

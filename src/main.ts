@@ -13,7 +13,6 @@ physCompare.useHalo = false;
 
 const gfx = new GraphicsCore();
 
-// Construindo o Universo Visual (Ordem importa para blending)
 new DeepSpace(gfx.scene);
 new Galaxy(gfx.scene);
 
@@ -55,34 +54,41 @@ function animate() {
 
     let lastAcc1 = {ax:0, ay:0, az:0};
     
-    // Physics Loop
+    // Loop de integração numérica Leapfrog puro
     for (let i = 0; i < ui.simSpeed; i++) {
         lastAcc1 = physMain.step(dt);
         if(ui.isSplit) physCompare.step(dt);
         
         stepCounter++;
-        if (stepCounter % 8 === 0) {
+        if (stepCounter % 6 === 0) {
+            // ALIMENTAÇÃO DIRETA DA TRILHA COM O VETOR 3D (x, y, z) SEM PROJEÇÕES 2D
             trailMain.addPoint(physMain.x, physMain.y, physMain.z);
             if(ui.isSplit) trailCompare.addPoint(physCompare.x, physCompare.y, physCompare.z);
         }
     }
 
-    // Sync Visuals
+    // Atualiza posições 3D reais no renderizador
     sunMain.update(physMain.t, physMain.x, physMain.y, physMain.z);
     if(ui.isSplit) sunCompare.update(physCompare.t, physCompare.x, physCompare.y, physCompare.z);
 
-    // Câmera Track no Sol se ativado (apenas pós-intro)
-    if (!gfx.introActive && ui.cameraMode === 'sun') {
-        gfx.controls1.target.lerp(sunMain.mesh.position, 0.03);
-        if(ui.isSplit) gfx.controls2.target.lerp(sunCompare.mesh.position, 0.03);
-    } else if (!gfx.introActive) {
-        gfx.controls1.target.lerp({x:0, y:0, z:0}, 0.03);
-        if(ui.isSplit) gfx.controls2.target.lerp({x:0, y:0, z:0}, 0.03);
+    // Gestão de Câmeras Cinematográficas baseada no modo selecionado na UI
+    if (!gfx.introActive) {
+        if (ui.cameraMode === 'sun') {
+            gfx.controls1.target.lerp(sunMain.mesh.position, 0.04);
+            if(ui.isSplit) gfx.controls2.target.lerp(sunCompare.mesh.position, 0.04);
+        } else if (ui.cameraMode === 'edge') {
+            // Modo Vista Lateral (Edge-on): Alinha a câmera perfeitamente no plano Z=0 olhando de lado para o disco e o Sol
+            gfx.controls1.target.lerp(sunMain.mesh.position, 0.04);
+            let edgeCamTargetPos = new THREE.Vector3(sunMain.mesh.position.x + 25, sunMain.mesh.position.y - 35, 2.0);
+            gfx.camera1.position.lerp(edgeCamTargetPos, 0.03);
+            if(ui.isSplit) gfx.controls2.target.lerp(sunCompare.mesh.position, 0.04);
+        } else {
+            gfx.controls1.target.lerp(new THREE.Vector3(0, 0, 0), 0.04);
+            if(ui.isSplit) gfx.controls2.target.lerp(new THREE.Vector3(0, 0, 0), 0.04);
+        }
     }
 
-    // Telemetria UI
-    let accMag = Math.sqrt(lastAcc1.ax**2 + lastAcc1.ay**2 + lastAcc1.az**2);
-    ui.updateTelemetry(accMag);
+    ui.updateTelemetry(lastAcc1);
 
     if (stepCounter % 60 === 0) {
         let { Ek, Ep } = physMain.getEnergies();

@@ -5,7 +5,7 @@ export class OrbitTrail {
     positions: Float32Array;
     colors: Float32Array;
     line: THREE.Line;
-    maxPts = 15000;
+    maxPts = 20000; // Alta densidade para refletir perfeitamente a oscilação vertical z(t)
     idx = 0;
 
     constructor(scene: THREE.Scene, colorHex: number) {
@@ -26,6 +26,7 @@ export class OrbitTrail {
     }
 
     addPoint(x: number, y: number, z: number) {
+        // USO DIRETO DO VETOR TRIDIMENSIONAL (x, y, z) DO LEAPFROG - NENHUMA PROJEÇÃO 2D
         if (this.idx < this.maxPts) {
             this.positions[this.idx * 3] = x;
             this.positions[this.idx * 3 + 1] = y;
@@ -38,17 +39,18 @@ export class OrbitTrail {
             this.positions[(this.maxPts-1)*3+2] = z;
         }
 
-        // Fade dinâmico e brilhante (Trail Cometa)
+        // Gradiente térmico emissivo temporal baseada em shader da trilha 3D
         for(let i=0; i < this.idx; i++) {
             let alpha = i / this.idx; 
-            alpha = Math.pow(alpha, 2.0); // Cauda afinando mais rápido no final
+            alpha = Math.pow(alpha, 1.8);
             
-            // Transição térmica visual: Laranja forte -> Vermelho escuro
             let r = 1.0 * alpha;
-            let g = 0.6 * alpha;
-            let b = 0.1 * alpha;
+            let g = 0.65 * alpha;
+            let b = 0.2 * alpha;
             
-            this.colors[i*3] = r; this.colors[i*3+1] = g; this.colors[i*3+2] = b;
+            this.colors[i*3] = r; 
+            this.colors[i*3+1] = g; 
+            this.colors[i*3+2] = b;
         }
 
         this.geo.setDrawRange(0, this.idx);

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Via Láctea N-Corpos - Visualização Científica</title>
+    <link rel="stylesheet" href="/src/style.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <div id="app"></div>
+    
+    <!-- UI Overlay (NASA/JPL Style Glassmorphism) -->
+    <div id="ui-container">
+      <div id="left-panel" class="glass-panel">
+        <div class="panel-header">
+          <span class="pulse"></span>
+          CONTROLE DA SIMULAÇÃO
+        </div>
+        
+        <div class="control-section">
+          <div class="section-title">COMPONENTES GRAVITACIONAIS</div>
+          <div class="control-row">
+            <label>HALO DE MATÉRIA ESCURA (NFW)</label>
+            <label class="switch">
+              <input type="checkbox" id="chk-halo" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="control-row">
+            <label>DISCO GALÁCTICO</label>
+            <label class="switch">
+              <input type="checkbox" id="chk-disk" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="control-row">
+            <label>BOJO CENTRAL</label>
+            <label class="switch">
+              <input type="checkbox" id="chk-bulge" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="control-section">
+          <div class="section-title">PARÂMETROS DA SIMULAÇÃO</div>
+          <div class="slider-row">
+            <label>Velocidade do Tempo (<span id="lbl-speed">5</span>x)</label>
+            <input type="range" id="sl-speed" min="1" max="50" value="5">
+          </div>
+          <button id="btn-reset" class="btn-primary">RESETAR ÓRBITA DO SOL</button>
+        </div>
+        
+        <div class="camera-controls">
+          <button id="btn-cam-orbit" class="btn-secondary active">ÓRBITA LIVRE</button>
+          <button id="btn-cam-sun" class="btn-secondary">FOCO NO SOL</button>
+        </div>
+      </div>
+
+      <div id="right-panel" class="glass-panel">
+        <div class="panel-header">TELEMETRIA EM TEMPO REAL</div>
+        
+        <div class="telemetry-grid">
+          <div class="telemetry-item">
+            <div class="telemetry-label">TEMPO DE SIMULAÇÃO</div>
+            <div class="telemetry-value"><span id="t-time">0.000</span> <span class="unit">Gyr</span></div>
+          </div>
+          <div class="telemetry-item">
+            <div class="telemetry-label">RAIO GALACTOCÊNTRICO</div>
+            <div class="telemetry-value"><span id="t-radius">8.20</span> <span class="unit">kpc</span></div>
+          </div>
+          <div class="telemetry-item">
+            <div class="telemetry-label">VELOCIDADE ORBITAL</div>
+            <div class="telemetry-value"><span id="t-vel">233.00</span> <span class="unit">km/s</span></div>
+          </div>
+          <div class="telemetry-item">
+            <div class="telemetry-label">ACELERAÇÃO TOTAL</div>
+            <div class="telemetry-value"><span id="t-acc">0.00E0</span> <span class="unit">kpc/Gyr²</span></div>
+          </div>
+          <div class="telemetry-item">
+            <div class="telemetry-label">ENERGIA CINÉTICA (Ek)</div>
+            <div class="telemetry-value"><span id="t-kin">0.00</span></div>
+          </div>
+          <div class="telemetry-item">
+            <div class="telemetry-label">ENERGIA POTENCIAL (Ep)</div>
+            <div class="telemetry-value"><span id="t-pot">0.00</span></div>
+          </div>
+        </div>
+      </div>
+      
+      <div id="bottom-bar">
+        <span>TCC - ENGENHARIA FÍSICA | DINÂMICA GALÁCTICA E MATÉRIA ESCURA</span>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

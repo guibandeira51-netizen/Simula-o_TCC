@@ -5,12 +5,10 @@ export class OrbitTrail {
     positions: Float32Array;
     colors: Float32Array;
     line: THREE.Line;
-    maxPts = 12000;
+    maxPts = 15000;
     idx = 0;
-    baseColor: THREE.Color;
 
-    constructor(scene: THREE.Scene, colorHex: number = 0xffa500) {
-        this.baseColor = new THREE.Color(colorHex);
+    constructor(scene: THREE.Scene, colorHex: number) {
         this.geo = new THREE.BufferGeometry();
         this.positions = new Float32Array(this.maxPts * 3);
         this.colors = new Float32Array(this.maxPts * 3);
@@ -18,10 +16,9 @@ export class OrbitTrail {
         this.geo.setAttribute('position', new THREE.BufferAttribute(this.positions, 3));
         this.geo.setAttribute('color', new THREE.BufferAttribute(this.colors, 3));
         
-        // Uso de ShaderMaterial customizado na linha para um fade perfeito
         const mat = new THREE.LineBasicMaterial({ 
             vertexColors: true, transparent: true, 
-            blending: THREE.AdditiveBlending, linewidth: 3 
+            blending: THREE.AdditiveBlending, linewidth: 2 
         });
         
         this.line = new THREE.Line(this.geo, mat);
@@ -35,22 +32,23 @@ export class OrbitTrail {
             this.positions[this.idx * 3 + 2] = z;
             this.idx++;
         } else {
-            // Shift rápido
             this.positions.copyWithin(0, 3, this.maxPts * 3);
             this.positions[(this.maxPts-1)*3] = x;
             this.positions[(this.maxPts-1)*3+1] = y;
             this.positions[(this.maxPts-1)*3+2] = z;
         }
 
-        // Gradiente de energia/cor na trilha
+        // Fade dinâmico e brilhante (Trail Cometa)
         for(let i=0; i < this.idx; i++) {
             let alpha = i / this.idx; 
-            // Calcula fade suavizado (Pow curve)
-            alpha = Math.pow(alpha, 1.5);
-            let c = this.baseColor.clone().multiplyScalar(alpha);
-            this.colors[i*3] = c.r;
-            this.colors[i*3+1] = c.g;
-            this.colors[i*3+2] = c.b;
+            alpha = Math.pow(alpha, 2.0); // Cauda afinando mais rápido no final
+            
+            // Transição térmica visual: Laranja forte -> Vermelho escuro
+            let r = 1.0 * alpha;
+            let g = 0.6 * alpha;
+            let b = 0.1 * alpha;
+            
+            this.colors[i*3] = r; this.colors[i*3+1] = g; this.colors[i*3+2] = b;
         }
 
         this.geo.setDrawRange(0, this.idx);
@@ -58,8 +56,5 @@ export class OrbitTrail {
         this.geo.attributes.color.needsUpdate = true;
     }
 
-    clear() {
-        this.idx = 0;
-        this.geo.setDrawRange(0, 0);
-    }
+    clear() { this.idx = 0; this.geo.setDrawRange(0, 0); }
 }

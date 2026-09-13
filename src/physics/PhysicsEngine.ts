@@ -1,4 +1,4 @@
-// A física do seu TCC foi preservada 100% matematicamente.
+// FÍSICA ESTRITAMENTE PRESERVADA (N-Corpos Leapfrog + Hernquist + Miyamoto-Nagai + NFW)
 export class PhysicsEngine {
     G = 4.30091e-6; // kpc (km/s)^2 / Msun
     KM_S_TO_KPC_GYR = 1.022712165045695;
@@ -123,7 +123,6 @@ export class PhysicsEngine {
     reset() {
         this.t = 0.0;
         this.x = this.r0; this.y = 0.0; this.z = this.z0;
-        // Usa as chaves completas para calcular a velocidade inicial de órbita estável
         let tempHalo = this.useHalo; this.useHalo = true;
         let tempDisk = this.useDisk; this.useDisk = true;
         let tempBulge = this.useBulge; this.useBulge = true;

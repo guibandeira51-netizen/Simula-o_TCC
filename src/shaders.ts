@@ -7,7 +7,10 @@ export const galaxyVertexShader = `
     void main() {
         vColor = customColor;
         vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-        gl_PointSize = size * (250.0 / -mvPosition.z);
+        // Calcula o tamanho, mas limita (clamp) para evitar que a tela seja preenchida 
+        // quando a câmera se aproxima muito do centro galáctico.
+        float pSize = size * (300.0 / length(mvPosition.xyz));
+        gl_PointSize = clamp(pSize, 0.0, 12.0);
         gl_Position = projectionMatrix * mvPosition;
     }
 `;
@@ -15,12 +18,14 @@ export const galaxyVertexShader = `
 export const galaxyFragmentShader = `
     varying vec3 vColor;
     void main() {
-        // Shape circular suave com bordas dissipadas (Glow)
         vec2 xy = gl_PointCoord.xy - vec2(0.5);
         float ll = length(xy);
         if(ll > 0.5) discard;
-        float alpha = (0.5 - ll) * 2.0;
-        alpha = pow(alpha, 1.5);
+        
+        // Redução drástica da opacidade base (0.12) para que o Additive Blending 
+        // de dezenas de milhares de estrelas não estoure em branco puro.
+        float alpha = pow(1.0 - (ll * 2.0), 2.0) * 0.12; 
+        
         gl_FragColor = vec4(vColor, alpha);
     }
 `;
@@ -44,7 +49,6 @@ export const sunFragmentShader = `
     varying vec3 vPosition;
     uniform float time;
     
-    // Simple 3D noise for plasma effect
     float hash(vec3 p) {
         p = fract(p * 0.3183099 + .1);
         p *= 17.0;
@@ -61,7 +65,6 @@ export const sunFragmentShader = `
     }
     
     void main() {
-        // Plasma surface
         vec3 p = vec3(vUv * 10.0, time * 0.2);
         float n = noise(p * 2.0) * 0.5 + noise(p * 4.0) * 0.25;
         
@@ -69,7 +72,6 @@ export const sunFragmentShader = `
         vec3 colorLight = vec3(1.0, 0.9, 0.5);
         vec3 surfaceColor = mix(colorDark, colorLight, n);
         
-        // Fresnel Edge Glow
         float viewIntensity = abs(dot(normalize(vPosition), vNormal));
         float fresnel = pow(1.0 - viewIntensity, 2.5);
         surfaceColor += vec3(1.0, 0.6, 0.2) * fresnel * 2.0;

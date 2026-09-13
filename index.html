@@ -3,96 +3,135 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Via Láctea N-Corpos - Visualização Científica</title>
+    <title>Visualização Científica: Dinâmica Galáctica e Matéria Escura</title>
     <link rel="stylesheet" href="/src/style.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
   </head>
   <body>
-    <div id="app"></div>
-    
-    <!-- UI Overlay (NASA/JPL Style Glassmorphism) -->
-    <div id="ui-container">
-      <div id="left-panel" class="glass-panel">
-        <div class="panel-header">
-          <span class="pulse"></span>
-          CONTROLE DA SIMULAÇÃO
+    <!-- Container 3D -->
+    <div id="canvas-container"></div>
+    <div id="split-divider"></div>
+
+    <!-- UI Científica (NASA/ESA Style) -->
+    <main id="ui-layer">
+      <!-- Top Bar -->
+      <header class="top-bar glass">
+        <div class="branding">
+          <div class="logo-mark"></div>
+          <div>
+            <h1>PLATAFORMA DE SIMULAÇÃO N-CORPOS</h1>
+            <h2>LABORATÓRIO DE ASTROFÍSICA | TCC ENGENHARIA FÍSICA</h2>
+          </div>
         </div>
-        
-        <div class="control-section">
-          <div class="section-title">COMPONENTES GRAVITACIONAIS</div>
-          <div class="control-row">
-            <label>HALO DE MATÉRIA ESCURA (NFW)</label>
-            <label class="switch">
+        <div class="status-indicators">
+          <div class="indicator"><span class="dot active"></span> WEBGL2 COMPUTE</div>
+          <div class="indicator"><span class="dot active"></span> 60 FPS HDR</div>
+        </div>
+      </header>
+
+      <!-- Left Panel: Controls -->
+      <aside class="side-panel left glass">
+        <section class="panel-section">
+          <h3>PARÂMETROS GRAVITACIONAIS</h3>
+          
+          <div class="toggle-group">
+            <label class="ui-switch">
               <input type="checkbox" id="chk-halo" checked>
               <span class="slider"></span>
             </label>
+            <div class="toggle-info">
+              <span class="toggle-title">HALO DE MATÉRIA ESCURA</span>
+              <span class="toggle-desc">Perfil NFW (Navarro-Frenk-White)</span>
+            </div>
           </div>
-          <div class="control-row">
-            <label>DISCO GALÁCTICO</label>
-            <label class="switch">
+
+          <div class="toggle-group">
+            <label class="ui-switch">
               <input type="checkbox" id="chk-disk" checked>
               <span class="slider"></span>
             </label>
+            <div class="toggle-info">
+              <span class="toggle-title">DISCO GALÁCTICO</span>
+              <span class="toggle-desc">Potencial de Miyamoto-Nagai</span>
+            </div>
           </div>
-          <div class="control-row">
-            <label>BOJO CENTRAL</label>
-            <label class="switch">
+
+          <div class="toggle-group">
+            <label class="ui-switch">
               <input type="checkbox" id="chk-bulge" checked>
               <span class="slider"></span>
             </label>
+            <div class="toggle-info">
+              <span class="toggle-title">BOJO CENTRAL</span>
+              <span class="toggle-desc">Perfil de Hernquist</span>
+            </div>
           </div>
-        </div>
+        </section>
 
-        <div class="control-section">
-          <div class="section-title">PARÂMETROS DA SIMULAÇÃO</div>
-          <div class="slider-row">
-            <label>Velocidade do Tempo (<span id="lbl-speed">5</span>x)</label>
+        <section class="panel-section">
+          <h3>SISTEMA DE VISUALIZAÇÃO</h3>
+          <div class="btn-group">
+            <button id="btn-cam-orbit" class="sci-btn active">VISÃO GLOBAL</button>
+            <button id="btn-cam-sun" class="sci-btn">RASTREAR SOL</button>
+          </div>
+          <button id="btn-split" class="sci-btn highlight mt-10">MODO COMPARAÇÃO (SPLIT SCREEN)</button>
+        </section>
+
+        <section class="panel-section">
+          <h3>TEMPO E INTEGRAÇÃO</h3>
+          <div class="slider-container">
+            <label>ACELERAÇÃO TEMPORAL: <span id="lbl-speed">5</span>x</label>
             <input type="range" id="sl-speed" min="1" max="50" value="5">
           </div>
-          <button id="btn-reset" class="btn-primary">RESETAR ÓRBITA DO SOL</button>
-        </div>
-        
-        <div class="camera-controls">
-          <button id="btn-cam-orbit" class="btn-secondary active">ÓRBITA LIVRE</button>
-          <button id="btn-cam-sun" class="btn-secondary">FOCO NO SOL</button>
-        </div>
-      </div>
+          <button id="btn-reset" class="sci-btn danger mt-10">REINICIAR CONDIÇÕES INICIAIS</button>
+        </section>
+      </aside>
 
-      <div id="right-panel" class="glass-panel">
-        <div class="panel-header">TELEMETRIA EM TEMPO REAL</div>
-        
-        <div class="telemetry-grid">
-          <div class="telemetry-item">
-            <div class="telemetry-label">TEMPO DE SIMULAÇÃO</div>
-            <div class="telemetry-value"><span id="t-time">0.000</span> <span class="unit">Gyr</span></div>
+      <!-- Right Panel: Telemetry & Charts -->
+      <aside class="side-panel right glass">
+        <section class="panel-section">
+          <h3>TELEMETRIA ORBITAL (SOL)</h3>
+          <div class="telemetry-grid">
+            <div class="tel-box">
+              <span class="tel-label">TEMPO (t)</span>
+              <span class="tel-val" id="t-time">0.000 <small>Gyr</small></span>
+            </div>
+            <div class="tel-box">
+              <span class="tel-label">RAIO (r)</span>
+              <span class="tel-val" id="t-radius">8.20 <small>kpc</small></span>
+            </div>
+            <div class="tel-box">
+              <span class="tel-label">VELOCIDADE (v)</span>
+              <span class="tel-val" id="t-vel">233.0 <small>km/s</small></span>
+            </div>
+            <div class="tel-box">
+              <span class="tel-label">ACELERAÇÃO (a)</span>
+              <span class="tel-val" id="t-acc">0.00e0 <small>kpc/G²</small></span>
+            </div>
           </div>
-          <div class="telemetry-item">
-            <div class="telemetry-label">RAIO GALACTOCÊNTRICO</div>
-            <div class="telemetry-value"><span id="t-radius">8.20</span> <span class="unit">kpc</span></div>
+        </section>
+
+        <section class="panel-section">
+          <h3>ANÁLISE ENERGÉTICA</h3>
+          <div class="chart-container">
+            <canvas id="energyChart"></canvas>
           </div>
-          <div class="telemetry-item">
-            <div class="telemetry-label">VELOCIDADE ORBITAL</div>
-            <div class="telemetry-value"><span id="t-vel">233.00</span> <span class="unit">km/s</span></div>
+          <div class="energy-legend">
+            <span class="tel-val">Ek: <span id="t-kin">0.00</span></span>
+            <span class="tel-val">Ep: <span id="t-pot">0.00</span></span>
           </div>
-          <div class="telemetry-item">
-            <div class="telemetry-label">ACELERAÇÃO TOTAL</div>
-            <div class="telemetry-value"><span id="t-acc">0.00E0</span> <span class="unit">kpc/Gyr²</span></div>
-          </div>
-          <div class="telemetry-item">
-            <div class="telemetry-label">ENERGIA CINÉTICA (Ek)</div>
-            <div class="telemetry-value"><span id="t-kin">0.00</span></div>
-          </div>
-          <div class="telemetry-item">
-            <div class="telemetry-label">ENERGIA POTENCIAL (Ep)</div>
-            <div class="telemetry-value"><span id="t-pot">0.00</span></div>
-          </div>
-        </div>
-      </div>
+        </section>
+      </aside>
       
-      <div id="bottom-bar">
-        <span>TCC - ENGENHARIA FÍSICA | DINÂMICA GALÁCTICA E MATÉRIA ESCURA</span>
-      </div>
-    </div>
+      <!-- Bottom HUD -->
+      <footer class="bottom-hud">
+        <div id="split-labels" class="hidden">
+          <div class="split-label left">COM MATÉRIA ESCURA (DINÂMICA ESTÁVEL)</div>
+          <div class="split-label right">SEM MATÉRIA ESCURA (ÓRBITA INSTÁVEL)</div>
+        </div>
+      </footer>
+    </main>
+
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

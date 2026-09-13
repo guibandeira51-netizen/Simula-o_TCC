@@ -1,7 +1,7 @@
 {
-  "name": "tcc-galaxy-sim-pro",
+  "name": "tcc-astro-visualizer",
   "private": true,
-  "version": "1.0.0",
+  "version": "2.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -13,6 +13,7 @@
     "vite": "^4.4.5"
   },
   "dependencies": {
-    "three": "^0.158.0"
+    "three": "^0.158.0",
+    "chart.js": "^4.4.0"
   }
 }

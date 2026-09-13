@@ -1,0 +1,23 @@
+{
+  "name": "tcc-astro-visualizer",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "test": "tsx --test tests/*.test.ts",
+    "validate": "tsx tests/report.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.2",
+    "@types/three": "0.158.3",
+    "prettier": "^3.9.6",
+    "tsx": "^4.23.13",
+    "typescript": "^5.0.2",
+    "vite": "^4.4.5"
+  },
+  "dependencies": {
+    "chart.js": "^4.4.0",
+    "three": "^0.158.0"
+  }
+}

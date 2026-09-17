@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#080d16" />
+    <title>Experimento: Órbita Solar | Guilherme Aleixo Bandeira · UEMS</title>
+  </head>
+  <body>
+    <div id="canvas-container"></div>
+    <div
+      id="camera-left"
+      class="camera-hit"
+      aria-label="Arraste para orbitar; rolagem para zoom"
+    ></div>
+    <div id="camera-right" class="camera-hit"></div>
+    <header>
+      <div class="institutional-heading">
+        <img class="university-logo" src="./assets/uems.png"
+          alt="UEMS — Universidade Estadual de Mato Grosso do Sul"
+          width="576" height="347" />
+        <div class="academic-identity">
+          <h1>Experimento: Órbita Solar</h1>
+          <p>Projeto de Trabalho de Conclusão de Curso</p>
+          <p class="author">Guilherme Aleixo Bandeira</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <span id="run-status" class="status">INICIALIZANDO</span
+        ><button id="btn-info">Modelo & fontes</button
+        ><button id="btn-panels" aria-expanded="true">Painéis</button>
+      </div>
+    </header>
+    <main id="ui-layer">
+      <aside class="panel left">
+        <section>
+          <div class="section-heading">
+            <h2>Condições iniciais</h2>
+          </div>
+          <label for="preset">Condição inicial</label
+          ><select id="preset">
+            <option value="solar">Traçador solar</option>
+            <option value="circular">Circular no plano</option>
+            <option value="perturbed">
+              Circular + perturbação radial de 1%
+            </option>
+          </select>
+          <p id="preset-note" class="muted"></p>
+          <label for="radius">Raio inicial R <span>kpc</span></label
+          ><input
+            id="radius"
+            type="number"
+            min="0.5"
+            max="50"
+            step="0.1"
+            value="8.178"
+            disabled
+          /><label for="resolution">Resolução temporal</label
+          ><select id="resolution">
+            <option value="1">Padrão · 1024 passos/período rápido</option>
+            <option value="2">Fina · 2048 passos/período rápido</option>
+            <option value="4">
+              Muito fina · 4096 passos/período rápido
+            </option></select
+          ><button id="btn-apply">Aplicar condições e reiniciar</button>
+        </section>
+        <section>
+          <div class="section-heading">
+            <h2>Campo gravitacional</h2>
+          </div>
+          <label class="switch-row"
+            ><span
+              >Halo de matéria escura<small>Navarro–Frenk–White</small></span
+            ><input id="chk-halo" type="checkbox" checked /></label
+          ><label class="switch-row"
+            ><span>Disco estelar<small>Miyamoto–Nagai</small></span
+            ><input id="chk-disk" type="checkbox" checked /></label
+          ><label class="switch-row"
+            ><span>Bojo central<small>Hernquist</small></span
+            ><input id="chk-bulge" type="checkbox" checked /></label
+          >
+          <p class="muted">Alterar o campo reinicia as duas trajetórias.</p>
+          <button id="btn-split" aria-pressed="false">
+            Comparar potenciais
+          </button>
+        </section>
+        <section>
+          <div class="section-heading">
+            <h2>Visualização</h2>
+          </div>
+          <div class="button-grid">
+            <button id="btn-cam-orbit">Global</button
+            ><button id="btn-cam-sun">Seguir traçador</button
+            ><button id="btn-top">Vista superior</button
+            ><button id="btn-edge">Perfil do disco</button>
+          </div>
+          <label class="switch-row"
+            ><span>Estrutura decorativa</span
+            ><input id="chk-visual" type="checkbox" checked /></label
+          ><label class="switch-row"
+            ><span>Modo didático<small>vetores do campo no traçador</small></span
+            ><input id="chk-didactic" type="checkbox"
+          /></label
+          ><label for="quality">Qualidade visual</label
+          ><select id="quality">
+            <option value="1">Alta · 100 mil pontos estelares</option>
+            <option value="0.45">Leve · 45 mil pontos estelares</option>
+          </select>
+        </section>
+      </aside>
+      <aside class="panel right">
+        <div class="section-heading">
+          <h2>Estado orbital</h2>
+        </div>
+        <div class="metrics">
+          <div>
+            <label>Raio galactocêntrico · R</label><strong id="t-radius">—</strong
+            ><small>kpc</small>
+          </div>
+          <div>
+            <label>Velocidade orbital · v</label><strong id="t-vel">—</strong
+            ><small>km/s</small>
+          </div>
+          <div>
+            <label>Altura · z</label><strong id="t-height">—</strong
+            ><small>kpc</small>
+          </div>
+          <div>
+            <label>Aceleração · |a|</label><strong id="t-acc">—</strong
+            ><small>(km/s)²/kpc</small>
+          </div>
+        </div>
+        <p id="velocity-components" class="mono muted"></p>
+        <div class="tabs" role="group" aria-label="Gráfico">
+          <button id="tab-energy" class="active">Energia</button
+          ><button id="tab-rotation">Rotação</button
+          ><button id="tab-errors">Erro numérico</button
+          ><button id="tab-evidence">Matéria escura</button>
+        </div>
+        <div class="chart"><canvas id="scienceChart"></canvas></div>
+        <p id="chart-note" class="muted"></p>
+        <section id="evidence-panel" class="evidence-panel" hidden>
+          <div class="section-heading">
+            <h2>Evidência dinâmica da matéria escura</h2>
+          </div>
+          <p class="muted">
+            Discrepância dinâmica entre o modelo bariônico e o modelo total com
+            halo. Isso não é uma prova direta de matéria escura.
+          </p>
+          <div class="evidence-grid">
+            <div><span>vc(R)</span><b id="t-vc">—</b></div>
+            <div><span>D(R)</span><b id="t-discrepancy">—</b></div>
+            <div><span>Bariônica</span><b id="t-fbar">—</b></div>
+            <div><span>Halo</span><b id="t-fhalo">—</b></div>
+            <div><span>Massa dinâmica eq.</span><b id="t-dynmass">—</b></div>
+            <div><span>Separação</span><b id="t-separation">—</b></div>
+          </div>
+          <div class="chart evidence-chart"><canvas id="discrepancyChart"></canvas></div>
+          <div class="chart evidence-chart"><canvas id="separationChart"></canvas></div>
+          <p class="muted evidence-note">
+            Massa dinâmica equivalente sob aproximação esférica:
+            M<sub>dyn,eq</sub> = Rv<sub>c</sub>²/G. O disco Miyamoto–Nagai não é
+            esfericamente simétrico.
+          </p>
+              <p id="initial-comparison" class="muted"></p>
+          <p class="muted">Raios mínimos e máximos medidos no intervalo integrado; periastro e apoastro cilíndricos requerem inversão radial. E = ½|v|² + Φ; Φ(∞)=0. A classificação usa E₀.</p>
+          <div class="comparison-grid">
+            <div>
+              <strong id="primary-scenario-label">Potencial completo — bojo + disco + halo NFW</strong>
+              <p id="primary-binding" class="muted"></p>
+              <span>Raio mínimo: <b id="m-rmin">—</b></span>
+              <span>Raio máximo: <b id="m-rmax">—</b></span>
+              <span>Periastro (R) <b id="m-pericenter">—</b></span>
+              <span>Apoastro (R) <b id="m-apocenter">—</b></span>
+              <span>e<sub>R</sub> <b id="m-ecc">—</b></span>
+              <span>v média <b id="m-speed">—</b></span>
+              <span>T radial <b id="m-rperiod">—</b></span>
+              <span>T azimutal <b id="m-aperiod">—</b></span>
+              <span>Δφ <b id="m-phase">—</b></span>
+              <span>Δφ entre cenários <b id="phase-difference">—</b></span>
+            </div>
+            <div>
+              <strong id="comparison-scenario-label">Potencial bariônico — bojo + disco</strong>
+              <p id="comparison-binding" class="muted"></p>
+              <span>Raio mínimo: <b id="c-rmin">—</b></span>
+              <span>Raio máximo: <b id="c-rmax">—</b></span>
+              <span>Periastro (R) <b id="c-pericenter">—</b></span>
+              <span>Apoastro (R) <b id="c-apocenter">—</b></span>
+              <span>e<sub>R</sub> <b id="c-ecc">—</b></span>
+              <span>v média <b id="c-speed">—</b></span>
+              <span>T radial <b id="c-rperiod">—</b></span>
+              <span>T azimutal <b id="c-aperiod">—</b></span>
+              <span>Δφ <b id="c-phase">—</b></span>
+            </div>
+          </div>
+          <h3>Vetores no traçador</h3>
+          <p class="muted">Direções físicas; comprimentos normalizados apenas para visualização.</p>
+          <div id="vector-readout" class="vector-readout"></div>
+        </section>
+        <div class="invariants">
+          <div><span>E específica</span><b id="t-energy">—</b></div>
+          <div><span>Lz específico</span><b id="t-lz">—</b></div>
+          <div><span>Máx. |ΔE| / escala</span><b id="t-error">—</b></div>
+          <div><span>Máx. |ΔLz| / escala</span><b id="t-lerror">—</b></div>
+          <div><span>Passo fixo</span><b id="t-step">—</b></div>
+        </div>
+        <p id="numerical-status" role="status" class="numerical-status"></p>
+        <p id="compare-status" class="muted"></p>
+        <button id="btn-export">Exportar dados · JSON</button>
+        <details class="legend">
+          <summary>Legenda e navegação</summary>
+          <p><i class="key gold"></i>Traçador integrado e sua trajetória</p>
+          <p><i class="key rose"></i>Potencial bariônico (vista direita)</p>
+          <p>
+            Bojo quente, disco, braços azuis, poeira e halo estelar difuso são
+            ilustrações estáticas. Não exercem forças. O halo de matéria escura
+            não emite luz.
+          </p>
+          <p>
+            Posições em kpc; tamanhos e brilho dos pontos fora de escala.
+            Arraste para girar; rolagem para zoom; botão direito para deslocar.
+          </p>
+        </details>
+      </aside>
+    </main>
+    <div id="split-labels" hidden>
+      <span id="split-primary"></span><span id="split-comparison"></span>
+    </div>
+    <footer>
+      <div class="playback">
+        <button id="btn-pause" class="primary" aria-label="Pausar simulação">
+          Ⅱ</button
+        ><button id="btn-reset" aria-label="Reiniciar">↺</button>
+        <div class="time">
+          <label>Tempo de simulação · t</label>
+          <strong id="t-time">0.000</strong><span>Gyr</span>
+        </div>
+        <div class="speed">
+          <label for="sl-speed">Ritmo <b id="lbl-speed">0.02 Gyr/s</b></label
+          ><input id="sl-speed" type="range" min="1" max="10" value="1" />
+        </div>
+      </div>
+      <div class="footer-note">
+        <span id="performance" aria-label="Desempenho de renderização">WEBGL</span>
+      </div>
+    </footer>
+    <dialog id="info-dialog">
+      <div class="dialog-head">
+        <span>Documentação científica</span
+        ><button id="btn-close" aria-label="Fechar">✕</button>
+      </div>
+      <h2>Modelo &amp; fontes</h2>
+      <p>
+        Potencial estacionário, axisimétrico, com disco Miyamoto–Nagai, bojo Hernquist e halo NFW. A partícula não altera a galáxia. Barras,
+        braços gravitacionais, gás e evolução cosmológica não estão incluídos.
+      </p>
+      <p>
+        O potencial é a soma de bojo, disco e halo NFW. Os
+        braços espirais mostrados na imagem são decoração e não exercem força
+        gravitacional nesta versão.
+      </p>
+      <p>
+        <b>Modelo de três componentes do TCC</b>: parâmetros de bojo, disco e halo
+        preservados da versão anterior, com procedência no Gala v1. Esta seleção
+        não reproduz o ajuste integral Gala v1 nem constitui um novo ajuste observacional.
+      </p>
+      <p>
+        O preset solar combina R e z observacionais com movimento peculiar solar
+        e velocidade circular calculada pelo modelo; não é uma reconstrução
+        exata da história do Sol. O domínio operacional de 0,5–50 kpc é
+        numérico; a região interna real exige modelagem da barra.
+      </p>
+      <h3>Parâmetros físicos</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Nome / símbolo</th>
+              <th>Valor</th>
+              <th>Unidade</th>
+              <th>Fonte</th>
+            </tr>
+          </thead>
+          <tbody id="parameters"></tbody>
+        </table>
+      </div>
+      <h3>Componentes do potencial</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Componente</th>
+              <th>Modelo</th>
+              <th>Parâmetros adotados</th>
+              <th>Fonte</th>
+            </tr>
+          </thead>
+          <tbody id="model-components"></tbody>
+        </table>
+      </div>
+      <h3>Restrições observacionais independentes</h3>
+      <div id="observations"></div>
+      <h3>Referências</h3>
+      <ul id="references"></ul>
+    </dialog>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
